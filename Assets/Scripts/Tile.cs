@@ -8,6 +8,7 @@ public class Tile: MonoBehaviour
     public TileState state { get; private set; }
     public TileCell cell { get; private set; }
     public int number { get; private set; }
+    public bool locked { get; set; }
 
     private Image background;
     private TextMeshProUGUI text;
@@ -51,10 +52,23 @@ public class Tile: MonoBehaviour
         this.cell = cell;
         this.cell.tile = this;
 
-        StartCoroutine(Animate(cell.transform.position));
+        StartCoroutine(Animate(cell.transform.position, false));
     }
 
-    private IEnumerator Animate(Vector3 to)
+    public void Merge(TileCell cell)
+    {
+        if (this.cell != null)
+        {
+            this.cell.tile = null;
+        }
+
+        this.cell = null;
+        cell.tile.locked = true;
+
+        StartCoroutine(Animate(cell.transform.position, true));
+    }
+
+    private IEnumerator Animate(Vector3 to, bool merging)
     {
         float el = 0f;
         float dur = 0.1f;
@@ -69,5 +83,10 @@ public class Tile: MonoBehaviour
         }
 
         transform.position = to;
+
+        if (merging)
+        {
+            Destroy(gameObject);
+        }
     }
 }
