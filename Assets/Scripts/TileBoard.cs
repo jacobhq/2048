@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class TileBoard : MonoBehaviour
 {
+    public GameManager gameManager;
     public Tile tilePrefab;
     public TileState[] tileStates;
 
@@ -17,13 +18,22 @@ public class TileBoard : MonoBehaviour
         tiles = new List<Tile>(capacity: 16);
     }
 
-    private void Start()
+    public void ClearBoard()
     {
-        CreateTile();
-        CreateTile();
+        foreach (var c in grid.cells)
+        {
+            c.tile = null;
+        }
+
+        foreach (var t in tiles)
+        {
+            Destroy(t.gameObject);
+        }
+
+        tiles.Clear();
     }
 
-    private void CreateTile()
+    public void CreateTile()
     {
         Tile tile = Instantiate(tilePrefab, grid.transform);
         tile.SetState(tileStates[0], 2);
@@ -154,6 +164,32 @@ public class TileBoard : MonoBehaviour
             CreateTile();
         }
 
-        // TODO: Game over
+        if (CheckForGameOver())
+        {
+            gameManager.GameOver();
+        }
+    }
+
+    private bool CheckForGameOver()
+    {
+        if (tiles.Count != grid.size)
+        {
+            return false;
+        }
+
+        foreach (var t in tiles)
+        {
+            TileCell up = grid.GetAdjacentCell(t.cell, Vector2Int.up);
+            TileCell down = grid.GetAdjacentCell(t.cell, Vector2Int.down);
+            TileCell left = grid.GetAdjacentCell(t.cell, Vector2Int.left);
+            TileCell right = grid.GetAdjacentCell(t.cell, Vector2Int.right);
+
+            if (up != null && CanMerge(t, up.tile) || down != null && CanMerge(t, down.tile) || left != null && CanMerge(t, left.tile) || right != null && CanMerge(t, right.tile))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
